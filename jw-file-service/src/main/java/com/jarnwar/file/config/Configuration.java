@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.jarnwar.file.context.listener.Listener;
 
-public class Configuration {
+public abstract class Configuration {
 	
 	private List<Listener> listeners;
 
