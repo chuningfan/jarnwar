@@ -26,7 +26,7 @@ import com.jarnwar.file.server.NettyServer;
 public class Bootstrap {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Bootstrap.class);
-	
+
 	private static final String BASE_PATH = System.getProperty("user.dir");
 
 	private static final String SPLITTER = ";";
@@ -90,23 +90,24 @@ public class Bootstrap {
 		fastDFSContext.init();
 
 		NettyServer server = serverContext.getBean(NettyServer.class);
-		
-		String command = "start";
-        if (args.length > 0) {
-            command = args[args.length - 1];
-        }
 
-        if (command.equals("start")) {
-            args[args.length - 1] = "start";
-    		server.start();
-        } else if (command.equals("stop")) {
-            args[args.length - 1] = "stop";
-            server.stop();
-        } else {
-        	LOG.warn("Bootstrap: command \"" + command + "\" does not exist.");
-        }
+		if (args.length > 0) {
+			String command = "start";
+			if (args.length > 0) {
+				command = args[args.length - 1];
+			}
+	
+			if (command.equals("start")) {
+				args[args.length - 1] = "start";
+				server.start();
+			} else if (command.equals("stop")) {
+				args[args.length - 1] = "stop";
+				server.stop();
+			} else {
+				LOG.warn("Bootstrap: command \"" + command + "\" does not exist.");
+			}
 
-
+		}
 	}
 
 	private static Map<Class<?>, Object> loadConfigs()
@@ -180,17 +181,27 @@ public class Bootstrap {
 				if (Objects.nonNull(val) && !"".equals(val.trim())) {
 					propKey = val;
 				}
-				String valString = prop.getProperty(propKey);
-				if (Objects.nonNull(valString)) {
-					f.setAccessible(true);
-					if (f.getType().isArray()) {
-						String[] array = valString.split(SPLITTER);
-						f.set(bean, f.getType().cast(array));
-					} else {
-						f.set(bean, f.getType().cast(valString));
+			}
+			String valString = prop.getProperty(propKey);
+			if (Objects.nonNull(valString)) {
+				f.setAccessible(true);
+				if (f.getType().isArray()) {
+					String[] array = valString.split(SPLITTER);
+					f.set(bean, f.getType().cast(array));
+				} else {
+					String type = f.getType().toString();
+					Object val = null;
+					if (type.endsWith("int")) {
+						val = Integer.valueOf(valString);
+					} else if (type.endsWith("long")) {
+						val = Long.valueOf(valString);
+					} else if (type.endsWith("boolean")) {
+						val = Boolean.valueOf(valString);
 					}
+					f.set(bean, val);
 				}
 			}
+
 		}
 	}
 
