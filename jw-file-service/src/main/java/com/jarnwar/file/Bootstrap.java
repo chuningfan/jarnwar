@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Maps;
 import com.jarnwar.file.config.FastDFSConfiguration;
 import com.jarnwar.file.config.NettyServerConfiguration;
@@ -22,6 +25,8 @@ import com.jarnwar.file.server.NettyServer;
 
 public class Bootstrap {
 
+	private static final Logger LOG = LoggerFactory.getLogger(Bootstrap.class);
+	
 	private static final String BASE_PATH = System.getProperty("user.dir");
 
 	private static final String SPLITTER = ";";
@@ -85,7 +90,22 @@ public class Bootstrap {
 		fastDFSContext.init();
 
 		NettyServer server = serverContext.getBean(NettyServer.class);
-		server.start();
+		
+		String command = "start";
+        if (args.length > 0) {
+            command = args[args.length - 1];
+        }
+
+        if (command.equals("start")) {
+            args[args.length - 1] = "start";
+    		server.start();
+        } else if (command.equals("stop")) {
+            args[args.length - 1] = "stop";
+            server.stop();
+        } else {
+        	LOG.warn("Bootstrap: command \"" + command + "\" does not exist.");
+        }
+
 
 	}
 
