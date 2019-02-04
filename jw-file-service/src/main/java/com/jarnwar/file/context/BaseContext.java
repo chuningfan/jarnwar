@@ -16,6 +16,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Maps;
 import com.jarnwar.file.component.Component;
 import com.jarnwar.file.config.Configuration;
@@ -29,6 +32,8 @@ import net.sf.cglib.proxy.MethodProxy;
 
 public abstract class BaseContext<Config extends Configuration> extends Observable implements MetaInfo {
 
+	private static final Logger LOG = LoggerFactory.getLogger(BaseContext.class);
+	
 	private static ClassLoader LOADER = null;
 
 	static {
@@ -71,6 +76,7 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	public void init() throws IllegalArgumentException, IllegalAccessException, InstantiationException,
 			ComponentException, NoSuchFieldException, SecurityException {
 		if (Objects.isNull(config)) {
+			LOG.info("No configuration was found for " + getClass());
 			return;
 		}
 		init0();

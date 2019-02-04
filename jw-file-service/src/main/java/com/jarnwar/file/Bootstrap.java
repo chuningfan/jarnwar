@@ -3,7 +3,6 @@ package com.jarnwar.file;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.common.collect.Maps;
 import com.jarnwar.file.config.FastDFSConfiguration;
 import com.jarnwar.file.config.NettyServerConfiguration;
 import com.jarnwar.file.config.ZooKeeperConfiguration;
