@@ -21,97 +21,110 @@ import com.jarnwar.file.context.annotation.MetaKey;
 import com.jarnwar.file.server.NettyServer;
 
 public class Bootstrap {
-	
+
 	private static final String BASE_PATH = System.getProperty("user.dir");
-	
+
 	private static final String SPLITTER = ";";
-	
+
 	private static Map<Class<?>, Object> CONFIGS = null;
-	
+
 	enum Config {
 		SERVER("server.properties") {
 			@Override
 			protected Class<?> getConfigClassMapping() {
 				return NettyServerConfiguration.class;
-			}	
-		}, ZOOKEEPER("zk.properties") {
+			}
+		},
+		ZOOKEEPER("zk.properties") {
 			@Override
 			protected Class<?> getConfigClassMapping() {
 				return ZooKeeperConfiguration.class;
 			}
-		}, REDIS("reids.properties") {
+		},
+		REDIS("reids.properties") {
 			@Override
 			protected Class<?> getConfigClassMapping() {
 				return null;
 			}
-		}, FASTDFS("fastdfs.properties") {
+		},
+		FASTDFS("fastdfs.properties") {
 			@Override
 			protected Class<?> getConfigClassMapping() {
 				return FastDFSConfiguration.class;
 			}
 		};
 		private String fileName;
+
 		private Config(String fileName) {
 			this.fileName = fileName;
 		}
+
 		protected abstract Class<?> getConfigClassMapping();
+
 		public String getFileName() {
 			return fileName;
 		}
+
 		public void setFileName(String fileName) {
 			this.fileName = fileName;
 		}
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		if (Objects.isNull(CONFIGS)) {
 			CONFIGS = loadConfigs();
 		}
-		NettyServerContext serverContext = new NettyServerContext((NettyServerConfiguration) CONFIGS.get(NettyServerConfiguration.class));
+		NettyServerContext serverContext = new NettyServerContext(
+				(NettyServerConfiguration) CONFIGS.get(NettyServerConfiguration.class));
 		serverContext.init();
-		ZooKeeperContext zkContext = new ZooKeeperContext((ZooKeeperConfiguration) CONFIGS.get(ZooKeeperConfiguration.class));
+		ZooKeeperContext zkContext = new ZooKeeperContext(
+				(ZooKeeperConfiguration) CONFIGS.get(ZooKeeperConfiguration.class));
 		zkContext.init();
-		FastDFSContext fastDFSContext = new FastDFSContext((FastDFSConfiguration) CONFIGS.get(FastDFSConfiguration.class));
+		FastDFSContext fastDFSContext = new FastDFSContext(
+				(FastDFSConfiguration) CONFIGS.get(FastDFSConfiguration.class));
 		fastDFSContext.init();
-		
+
 		NettyServer server = serverContext.getBean(NettyServer.class);
 		server.start();
-		
+
 	}
 
-	private static Map<Class<?>, Object> loadConfigs() throws InstantiationException, IllegalAccessException, FileNotFoundException, IOException {
+	private static Map<Class<?>, Object> loadConfigs()
+			throws InstantiationException, IllegalAccessException, FileNotFoundException, IOException {
 		String configPath = BASE_PATH + "/config";
 		File configDir = new File(configPath);
 		Map<Class<?>, Object> returnMap = Maps.newConcurrentMap();
 		if (configDir.exists() && configDir.isDirectory()) {
 			File[] files = configDir.listFiles();
-			if (Objects.nonNull(files) && files.length > 0) {	
+			if (Objects.nonNull(files) && files.length > 0) {
 				String fileName = null;
 				Properties prop = null;
 				Object instance = null;
 				Class<?> configClass = null;
-				for (File file: files) {
+				for (File file : files) {
 					if (file.isFile()) {
 						fileName = file.getName();
 						switch (fileName) {
-						case "server.properties": 
+						case "server.properties":
 							configClass = Config.SERVER.getConfigClassMapping();
 							instance = configClass.newInstance();
 							break;
-						case "zk.properties": 
+						case "zk.properties":
 							configClass = Config.ZOOKEEPER.getConfigClassMapping();
 							break;
-						case "redis.properties": 
+						case "redis.properties":
 							configClass = Config.REDIS.getConfigClassMapping();
 							break;
-						case "fastdfs.properties": 
+						case "fastdfs.properties":
 							configClass = Config.FASTDFS.getConfigClassMapping();
 							break;
 						}
-						instance = configClass.newInstance();
-						prop = getPropFromFile(file);
-						setValuesToBean(instance, prop);
-						returnMap.put(configClass, instance);
+						if (Objects.isNull(configClass)) {
+							instance = configClass.newInstance();
+							prop = getPropFromFile(file);
+							setValuesToBean(instance, prop);
+							returnMap.put(configClass, instance);
+						}
 					}
 				}
 			} else {
@@ -133,12 +146,13 @@ public class Bootstrap {
 			return prop;
 		}
 	}
-	
-	private static final void setValuesToBean(Object bean, Properties prop) throws IllegalArgumentException, IllegalAccessException {
+
+	private static final void setValuesToBean(Object bean, Properties prop)
+			throws IllegalArgumentException, IllegalAccessException {
 		Class<?> clazz = bean.getClass();
 		Field[] fields = clazz.getDeclaredFields();
 		String propKey = null;
-		for (Field f: fields) {
+		for (Field f : fields) {
 			propKey = f.getName();
 			MetaKey mk = f.getAnnotation(MetaKey.class);
 			if (mk != null) {
@@ -159,5 +173,5 @@ public class Bootstrap {
 			}
 		}
 	}
-	
+
 }
