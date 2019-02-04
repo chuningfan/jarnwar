@@ -139,7 +139,7 @@ public class Bootstrap {
 							configClass = Config.FASTDFS.getConfigClassMapping();
 							break;
 						}
-						if (Objects.isNull(configClass)) {
+						if (Objects.nonNull(configClass)) {
 							instance = configClass.newInstance();
 							prop = getPropFromFile(file);
 							setValuesToBean(instance, prop);
