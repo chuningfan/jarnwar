@@ -1,6 +1,7 @@
 package com.jarnwar.file;
 
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.collect.Maps;
 import com.jarnwar.file.config.FastDFSConfiguration;
@@ -13,10 +14,12 @@ import com.jarnwar.file.server.NettyServer;
 
 public class Bootstrap {
 	
-	private static final Map<Class<?>, Object> CONFIGS = Maps.newHashMap();
+	private static Map<Class<?>, Object> CONFIGS = null;
 	
 	public static void main(String[] args) throws Exception {
-		loadConfigs();
+		if (Objects.isNull(CONFIGS)) {
+			CONFIGS = loadConfigs();
+		}
 		NettyServerContext serverContext = new NettyServerContext((NettyServerConfiguration) CONFIGS.get(NettyServerConfiguration.class));
 		serverContext.init();
 		ZooKeeperContext zkContext = new ZooKeeperContext((ZooKeeperConfiguration) CONFIGS.get(ZooKeeperConfiguration.class));

@@ -56,9 +56,13 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 
 	public BaseContext(Config config) throws IllegalArgumentException, IllegalAccessException, InstantiationException {
 		this.config = config;
-		List<Listener> listeners = config.getListeners();
-		if (Objects.nonNull(listeners) && !listeners.isEmpty()) {
-			this.tpx = new ThreadPoolExecutor(listeners.size() * 3 / 4, listeners.size(), 2000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(listeners.size()));
+		if (Objects.nonNull(config)) {
+			List<Listener> listeners = config.getListeners();
+			if (Objects.nonNull(listeners) && !listeners.isEmpty()) {
+				this.tpx = new ThreadPoolExecutor(listeners.size() * 3 / 4, listeners.size(), 2000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(listeners.size()));
+			} else {
+				this.tpx = null;
+			}
 		} else {
 			this.tpx = null;
 		}
@@ -66,6 +70,9 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 
 	public void init() throws IllegalArgumentException, IllegalAccessException, InstantiationException,
 			ComponentException, NoSuchFieldException, SecurityException {
+		if (Objects.isNull(config)) {
+			return;
+		}
 		init0();
 		addListeners();
 		Component<Config, ?> comp = getComponent();
