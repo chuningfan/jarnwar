@@ -63,7 +63,7 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 		this.config = config;
 		if (Objects.nonNull(config)) {
 			List<Listener> listeners = config.getListeners();
-			if (Objects.nonNull(listeners) && !listeners.isEmpty()) {
+			if (config.isAsyncListening() && Objects.nonNull(listeners) && !listeners.isEmpty()) {
 				this.tpx = new ThreadPoolExecutor(listeners.size() * 3 / 4, listeners.size(), 2000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(listeners.size()));
 			} else {
 				this.tpx = null;
@@ -165,11 +165,16 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	}
 
 	private void effectOnListener(Event event) {
-		if (countObservers() > 0 && Objects.nonNull(tpx)) {
-			tpx.submit(() -> {
+		if (countObservers() > 0) {
+			if (Objects.nonNull(tpx)) {
+				tpx.submit(() -> {
+					setChanged();
+					notifyObservers(event);
+				});
+			} else {
 				setChanged();
 				notifyObservers(event);
-			});
+			}
 		}
 	}
 
