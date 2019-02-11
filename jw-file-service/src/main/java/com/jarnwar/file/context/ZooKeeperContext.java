@@ -17,7 +17,7 @@ public class ZooKeeperContext extends BaseContext<ZooKeeperConfiguration> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected Component<ZooKeeperConfiguration, ?> getComponent() {
+	public Component<ZooKeeperConfiguration, ?> getComponent() {
 		return (Component<ZooKeeperConfiguration, ?>) BEANS.get(ZooKeeperComponent.class);
 	}
 

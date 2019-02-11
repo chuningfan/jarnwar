@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.jarnwar.file.config.FastDFSConfiguration;
 import com.jarnwar.file.config.NettyServerConfiguration;
 import com.jarnwar.file.config.ZooKeeperConfiguration;
+import com.jarnwar.file.context.BaseContext;
 import com.jarnwar.file.context.FastDFSContext;
 import com.jarnwar.file.context.NettyServerContext;
 import com.jarnwar.file.context.ZooKeeperContext;
@@ -32,6 +33,8 @@ public class Bootstrap {
 	private static final String SPLITTER = ";";
 
 	private static Map<Class<?>, Object> CONFIGS = null;
+	
+	private static Map<Class<?>, Object> CONTEXT_BEANS = Maps.newConcurrentMap();
 
 	enum Config {
 		SERVER("server.properties") {
@@ -89,7 +92,11 @@ public class Bootstrap {
 				(FastDFSConfiguration) CONFIGS.get(FastDFSConfiguration.class));
 		fastDFSContext.init();
 
-		NettyServer server = serverContext.getBean(NettyServer.class);
+		CONTEXT_BEANS.put(NettyServerContext.class, serverContext);
+		CONTEXT_BEANS.put(ZooKeeperContext.class, zkContext);
+		CONTEXT_BEANS.put(FastDFSContext.class, fastDFSContext);
+		
+		NettyServer server = BaseContext.getBean(NettyServer.class);
 
 		if (args.length > 0) {
 			String command = "start";
@@ -205,4 +212,9 @@ public class Bootstrap {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> T getContext(Class<? extends T> clazz) {
+		return (T) CONTEXT_BEANS.get(clazz);
+	}
+	
 }

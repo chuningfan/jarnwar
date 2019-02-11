@@ -18,7 +18,7 @@ public class FastDFSContext extends BaseContext<FastDFSConfiguration> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected Component<FastDFSConfiguration, ?> getComponent() {
+	public Component<FastDFSConfiguration, ?> getComponent() {
 		return (Component<FastDFSConfiguration, ?>) BEANS.get(FastDFSComponent.class);
 	}
 

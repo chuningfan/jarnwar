@@ -25,6 +25,7 @@ import com.jarnwar.file.config.Configuration;
 import com.jarnwar.file.context.listener.Event;
 import com.jarnwar.file.context.listener.Listener;
 import com.jarnwar.file.exception.ComponentException;
+import com.jarnwar.file.service.OperationServiceImpl;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -35,7 +36,11 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	private static final Logger LOG = LoggerFactory.getLogger(BaseContext.class);
 	
 	private static ClassLoader LOADER = null;
-
+	
+	private static final Class<?>[] SERVICES = {OperationServiceImpl.class};
+	
+	protected static final Map<Class<?>, Object> BEANS = Maps.newConcurrentMap();
+	
 	static {
 		if (Objects.isNull(LOADER)) {
 			LOADER = Thread.currentThread().getContextClassLoader();
@@ -43,9 +48,16 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 		if (Objects.isNull(LOADER)) {
 			LOADER = BaseContext.class.getClassLoader();
 		}
+		//add service to BEANS
+		for (Class<?> clazz: SERVICES) {
+			try {
+				Object instance = clazz.newInstance();
+				BEANS.put(clazz, instance);
+			} catch (InstantiationException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
 	}
-
-	protected static final Map<Class<?>, Object> BEANS = Maps.newConcurrentMap();
 
 	private volatile Map<String, Object> metaData = Maps.newHashMap();
 
@@ -82,8 +94,8 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 		init0();
 		addListeners();
 		Component<Config, ?> comp = getComponent();
-		Object client = comp.getClient(config);
-		if (Objects.nonNull(client)) {
+		Object instance = comp.getInstance(config);
+		if (Objects.nonNull(instance)) {
 			Type[] types = comp.getClass().getGenericInterfaces();
 			if (Objects.isNull(types) || types.length == 0) {
 				throw new ComponentException("Maybe you should provide generic types for " + comp.getClass());
@@ -97,14 +109,14 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 					if (Objects.isNull(BEANS.get(clientClass))) {
 						synchronized (BEANS) {
 							if (Objects.isNull(BEANS.get(clientClass)))
-								BEANS.put(clientClass, new JdkProxy(LOADER, client, clientClass).getProxyInstance());
+								BEANS.put(clientClass, new JdkProxy(LOADER, instance, clientClass).getProxyInstance());
 						}
 					}
 				} else {
 					if (Objects.isNull(BEANS.get(clientClass))) {
 						synchronized (BEANS) {
 							if (Objects.isNull(BEANS.get(clientClass)))
-								BEANS.put(clientClass, new CglibProxy(client).getProxyInstance());
+								BEANS.put(clientClass, new CglibProxy(instance).getProxyInstance());
 						}
 					}
 				}
@@ -117,7 +129,7 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	// process configuration data.
 	protected abstract void init0();
 
-	protected abstract Component<Config, ?> getComponent();
+	public abstract Component<Config, ?> getComponent();
 
 	private void addListeners() {
 		List<Listener> listeners = config.getListeners();
@@ -156,11 +168,11 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T getBean(Class<? extends T> clazz) {
+	public static <T> T getBean(Class<? extends T> clazz) {
 		return (T) BEANS.get(clazz);
 	}
 
-	public void remove(Class<?> clazz) {
+	public static void remove(Class<?> clazz) {
 		BEANS.remove(clazz);
 	}
 

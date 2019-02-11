@@ -27,7 +27,7 @@ public class NettyServerContext extends BaseContext<NettyServerConfiguration> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected Component<NettyServerConfiguration, ?> getComponent() {
+	public Component<NettyServerConfiguration, ?> getComponent() {
 		return (Component<NettyServerConfiguration, ?>) BEANS.get(NettyServer.class);
 	}
 	

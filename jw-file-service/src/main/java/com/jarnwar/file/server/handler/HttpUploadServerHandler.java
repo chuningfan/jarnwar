@@ -61,6 +61,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.jarnwar.file.context.BaseContext;
+import com.jarnwar.file.service.OperationService;
+import com.jarnwar.file.service.OperationServiceImpl;
+
 import static io.netty.buffer.Unpooled.*;
 
 public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObject> {
@@ -74,6 +78,8 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
     private HttpData partialContent;
 
     private final StringBuilder responseContent = new StringBuilder();
+    
+    private OperationService service = BaseContext.getBean(OperationServiceImpl.class);
 
     private static final HttpDataFactory factory =
             new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed

@@ -6,8 +6,9 @@ import com.jarnwar.file.zk.ZooKeeperOperator;
 public class ZooKeeperComponent implements Component<ZooKeeperConfiguration, ZooKeeperOperator> {
 
 	@Override
-	public ZooKeeperOperator getClient(ZooKeeperConfiguration config) {
+	public ZooKeeperOperator getInstance(ZooKeeperConfiguration config) {
 		return new ZooKeeperOperator(config);
 	}
+
 
 }
