@@ -36,7 +36,7 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	
 	private static ClassLoader LOADER = null;
 	
-	protected static final Map<Class<?>, Object> BEANS = Maps.newConcurrentMap();
+	protected volatile static Map<Class<?>, Object> BEANS = Maps.newConcurrentMap();
 	
 	static {
 		if (Objects.isNull(LOADER)) {
