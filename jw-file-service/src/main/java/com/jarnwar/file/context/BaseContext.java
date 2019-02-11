@@ -25,7 +25,6 @@ import com.jarnwar.file.config.Configuration;
 import com.jarnwar.file.context.listener.Event;
 import com.jarnwar.file.context.listener.Listener;
 import com.jarnwar.file.exception.ComponentException;
-import com.jarnwar.file.service.OperationServiceImpl;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -37,8 +36,6 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 	
 	private static ClassLoader LOADER = null;
 	
-	private static final Class<?>[] SERVICES = {OperationServiceImpl.class};
-	
 	protected static final Map<Class<?>, Object> BEANS = Maps.newConcurrentMap();
 	
 	static {
@@ -47,15 +44,6 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 		}
 		if (Objects.isNull(LOADER)) {
 			LOADER = BaseContext.class.getClassLoader();
-		}
-		//add service to BEANS
-		for (Class<?> clazz: SERVICES) {
-			try {
-				Object instance = clazz.newInstance();
-				BEANS.put(clazz, instance);
-			} catch (InstantiationException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -104,19 +92,19 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 				Field f = parameterizedType.getClass().getDeclaredField("actualTypeArguments");
 				f.setAccessible(true);
 				Type[] genericClassArray = (Type[]) f.get(parameterizedType);
-				Class<?> clientClass = (Class<?>) genericClassArray[1];
-				if (Objects.nonNull(clientClass) && clientClass.isInterface()) {
-					if (Objects.isNull(BEANS.get(clientClass))) {
+				Class<?> instanceClass = (Class<?>) genericClassArray[1];
+				if (Objects.nonNull(instanceClass) && instanceClass.isInterface()) {
+					if (Objects.isNull(BEANS.get(instanceClass))) {
 						synchronized (BEANS) {
-							if (Objects.isNull(BEANS.get(clientClass)))
-								BEANS.put(clientClass, new JdkProxy(LOADER, instance, clientClass).getProxyInstance());
+							if (Objects.isNull(BEANS.get(instanceClass)))
+								BEANS.put(instanceClass, new JdkProxy(LOADER, instance, instanceClass).getProxyInstance());
 						}
 					}
 				} else {
-					if (Objects.isNull(BEANS.get(clientClass))) {
+					if (Objects.isNull(BEANS.get(instanceClass))) {
 						synchronized (BEANS) {
-							if (Objects.isNull(BEANS.get(clientClass)))
-								BEANS.put(clientClass, new CglibProxy(instance).getProxyInstance());
+							if (Objects.isNull(BEANS.get(instanceClass)))
+								BEANS.put(instanceClass, new CglibProxy(instance).getProxyInstance());
 						}
 					}
 				}
@@ -124,6 +112,7 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 		} else {
 			throw new ComponentException("When collecting bean, occurred an error!");
 		}
+		
 	}
 
 	// process configuration data.
@@ -174,6 +163,16 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 
 	public static void remove(Class<?> clazz) {
 		BEANS.remove(clazz);
+	}
+	
+	public static void addBean(Object instance) {
+		if (Objects.isNull(BEANS.get(instance.getClass()))) {
+			synchronized (BEANS) {
+				if (Objects.isNull(BEANS.get(instance.getClass()))) {
+					BEANS.put(instance.getClass(), instance);
+				}
+			}
+		}
 	}
 
 	private void effectOnListener(Event event) {

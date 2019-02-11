@@ -2,22 +2,16 @@ package com.jarnwar.file.service;
 
 import java.util.List;
 
-import org.csource.fastdfs.StorageClient1;
-
-import com.jarnwar.file.Bootstrap;
-import com.jarnwar.file.component.FastDFSComponent;
-import com.jarnwar.file.context.FastDFSContext;
+import com.jarnwar.file.context.BaseContext;
+import com.jarnwar.file.fastdfs.FastDFSConnectionPool;
 
 public class OperationServiceImpl implements OperationService {
 
-	private StorageClient1 client;
+	private FastDFSConnectionPool pool;
 	
-	{
-		FastDFSContext cxt = Bootstrap.getContext(FastDFSContext.class);
-		FastDFSComponent dfs = (FastDFSComponent) cxt.getComponent();
-		client = (StorageClient1) dfs.getClient();
+	public OperationServiceImpl() {
+		pool = BaseContext.getBean(FastDFSConnectionPool.class);
 	}
-	
 	
 	@Override
 	public String add(Object... objects) {

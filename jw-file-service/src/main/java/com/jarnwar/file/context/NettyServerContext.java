@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Objects;
 
 import com.jarnwar.file.component.Component;
+import com.jarnwar.file.component.NettyServerComponent;
 import com.jarnwar.file.config.NettyServerConfiguration;
 import com.jarnwar.file.context.listener.Listener;
-import com.jarnwar.file.server.NettyServer;
 
 public class NettyServerContext extends BaseContext<NettyServerConfiguration> {
 
@@ -25,10 +25,9 @@ public class NettyServerContext extends BaseContext<NettyServerConfiguration> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Component<NettyServerConfiguration, ?> getComponent() {
-		return (Component<NettyServerConfiguration, ?>) BEANS.get(NettyServer.class);
+		return new NettyServerComponent();
 	}
 	
 }

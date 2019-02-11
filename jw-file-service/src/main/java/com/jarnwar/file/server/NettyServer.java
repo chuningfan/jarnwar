@@ -3,6 +3,7 @@ package com.jarnwar.file.server;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 import com.jarnwar.file.config.NettyServerConfiguration;
 
@@ -50,12 +51,24 @@ public class NettyServer implements Server {
 				.childHandler(config.getProtocol().getChannelInitializer());
 		try {
 			Channel ch = serverBootstrap.bind(LOCAL_IP, config.getPort()).sync().channel();
+			printFlag();
 			ch.closeFuture().sync();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
 			stop();
 		}
+	}
+
+	private void printFlag() {
+		String flag = "☆☆☆☆☆ ☆      ☆ ☆☆☆           ☆☆☆\n" +
+					  "	 ☆    ☆ ☆    ☆  ☆             ☆\n" +
+					  "         ☆    ☆  ☆   ☆   ☆     ☆     ☆\n" +
+					  "         ☆    ☆   ☆  ☆    ☆    ☆    ☆\n" +
+					  "         ☆    ☆    ☆ ☆     ☆   ☆   ☆\n" + 
+					  "         ☆    ☆     ☆☆      ☆  ☆  ☆\n" +
+					  "      ☆ ☆    ☆       ☆       ☆   ☆\n";
+		Logger.getGlobal().info(flag);
 	}
 
 	@Override

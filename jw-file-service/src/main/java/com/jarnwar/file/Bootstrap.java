@@ -23,18 +23,21 @@ import com.jarnwar.file.context.NettyServerContext;
 import com.jarnwar.file.context.ZooKeeperContext;
 import com.jarnwar.file.context.annotation.MetaKey;
 import com.jarnwar.file.server.NettyServer;
+import com.jarnwar.file.service.OperationServiceImpl;
 
 public class Bootstrap {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Bootstrap.class);
 
-	private static final String BASE_PATH = System.getProperty("user.dir");
+	public static final String BASE_PATH = System.getProperty("user.dir");
 
 	private static final String SPLITTER = ";";
 
 	private static Map<Class<?>, Object> CONFIGS = null;
-	
+
 	private static Map<Class<?>, Object> CONTEXT_BEANS = Maps.newConcurrentMap();
+
+	private static final Class<?>[] SERVICES = { OperationServiceImpl.class };
 
 	enum Config {
 		SERVER("server.properties") {
@@ -95,7 +98,17 @@ public class Bootstrap {
 		CONTEXT_BEANS.put(NettyServerContext.class, serverContext);
 		CONTEXT_BEANS.put(ZooKeeperContext.class, zkContext);
 		CONTEXT_BEANS.put(FastDFSContext.class, fastDFSContext);
-		
+
+		// add service to BEANS
+		for (Class<?> clazz : SERVICES) {
+			try {
+				Object serviceInstance = clazz.newInstance();
+				BaseContext.addBean(serviceInstance);
+			} catch (InstantiationException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+
 		NettyServer server = BaseContext.getBean(NettyServer.class);
 
 		if (args.length > 0) {
@@ -103,7 +116,7 @@ public class Bootstrap {
 			if (args.length > 0) {
 				command = args[args.length - 1];
 			}
-	
+
 			if (command.equals("start")) {
 				args[args.length - 1] = "start";
 				server.start();
@@ -216,5 +229,5 @@ public class Bootstrap {
 	public static <T> T getContext(Class<? extends T> clazz) {
 		return (T) CONTEXT_BEANS.get(clazz);
 	}
-	
+
 }

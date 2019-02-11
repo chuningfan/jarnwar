@@ -6,8 +6,4 @@ public interface Component<Config, T> {
 		return null;
 	}
 	
-	default Object getClient() {
-		return null;
-	}
-	
 }

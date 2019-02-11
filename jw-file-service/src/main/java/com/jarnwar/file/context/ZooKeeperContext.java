@@ -15,10 +15,9 @@ public class ZooKeeperContext extends BaseContext<ZooKeeperConfiguration> {
 	protected void init0() {
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Component<ZooKeeperConfiguration, ?> getComponent() {
-		return (Component<ZooKeeperConfiguration, ?>) BEANS.get(ZooKeeperComponent.class);
+		return new ZooKeeperComponent();
 	}
 
 }
