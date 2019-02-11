@@ -64,7 +64,7 @@ public abstract class BaseContext<Config extends Configuration> extends Observab
 		if (Objects.nonNull(config)) {
 			List<Listener> listeners = config.getListeners();
 			if (config.isAsyncListening() && Objects.nonNull(listeners) && !listeners.isEmpty()) {
-				this.tpx = new ThreadPoolExecutor(listeners.size() * 3 / 4, listeners.size(), 2000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(listeners.size()));
+				this.tpx = new ThreadPoolExecutor((listeners.size() * 3 / 4) == 0 ? 1 : (listeners.size() * 3 / 4), listeners.size() * 2, 2000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(listeners.size() * 2));
 			} else {
 				this.tpx = null;
 			}
