@@ -1,19 +1,22 @@
 package com.jarnwar.file.server.handler;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Lists;
-import com.jarnwar.file.client.FileDto;
 import com.jarnwar.file.client.FileRequest;
 import com.jarnwar.file.client.FileResponse;
 import com.jarnwar.file.context.annotation.Autowired;
 import com.jarnwar.file.service.OperationService;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.DefaultChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.TimeoutException;
 
 public class TcpUploadServerHandler extends SimpleChannelInboundHandler<FileRequest> {
 
@@ -23,55 +26,65 @@ public class TcpUploadServerHandler extends SimpleChannelInboundHandler<FileRequ
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, FileRequest msg) throws Exception {
 		byte type = msg.getOperationType();
-		List<FileDto> fileDtos = msg.getFiles();
+		byte[] fileData = msg.getFileData();
 		FileResponse resp = new FileResponse();
 		resp.setOperationType(type);
 		switch (type) {
 		case 0:
-			String fileIdentity = service.upload(convert2Files(fileDtos));
+			int fileIdentity = service.upload(convertToFile(fileData));
 			resp.setState((byte) 0);
-			FileDto up = new FileDto();
-			up.setFileIdentity(fileIdentity);
-			resp.setFiles(Lists.newArrayList(up));
+			resp.setFileIdentity(fileIdentity);
 			break;
 		case 1:
-			List<File> files = service
-					.download(fileDtos.stream().map(FileDto::getFileIdentity).collect(Collectors.toList()));
+			File file = service.download(msg.getFileIdentity());
 			resp.setState((byte) 0);
-			resp.setFiles(convert2FileDtos(files));
+			resp.setFileData(convertToByteArray(file));
 			break;
 		case 2:
-			service.remove(fileDtos.stream().map(FileDto::getFileIdentity).collect(Collectors.toList()));
+			service.remove(msg.getFileIdentity());
 			resp.setState((byte) 0);
 			break;
 		}
-		ctx.write(resp);
-		ctx.flush();
+		ChannelFuture future = ctx.writeAndFlush(resp, new DefaultChannelPromise(ctx.channel()));
+		try {
+			future.get(5, TimeUnit.SECONDS);
+		} catch(TimeoutException e) {
+			future.cancel(true);
+		}
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		ctx.close();
+		cause.printStackTrace();
+        if (ctx.channel().isActive()) {
+            ctx.writeAndFlush("ERR: " +
+                    cause.getClass().getSimpleName() + ": " +
+                    cause.getMessage() + '\n').addListener(ChannelFutureListener.CLOSE);
+        }
 	}
 
-	private List<File> convert2Files(List<FileDto> fileDtos) throws IOException {
-		List<File> files = Lists.newArrayList();
-		for (FileDto dto : fileDtos) {
-			files.add(dto.getFile());
-		}
-		return files;
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		super.channelInactive(ctx);
+    	ctx.flush();
+    	ctx.close();
 	}
 
-	private List<FileDto> convert2FileDtos(List<File> files) {
-		List<FileDto> fileDtos = Lists.newArrayList();
-		for (File f : files) {
-			FileDto dto = new FileDto();
-			int hashCode = f.hashCode();
-			dto.setFile(f);
-			dto.setFileIdentity(hashCode + "");
-			fileDtos.add(dto);
-		}
-		return fileDtos;
+	private File convertToFile(byte[] fileData) throws IOException {
+		File file = new File("");
+		@SuppressWarnings("resource")
+		FileOutputStream fos = new FileOutputStream(file);
+		fos.write(fileData);
+		return file;
+	}
+
+	private byte[] convertToByteArray(File file) throws IOException {
+		@SuppressWarnings("resource")
+		FileInputStream fis = new FileInputStream(file);
+		int length = fis.available();
+		byte[] b = new byte[length];
+		fis.read(b);
+		return b;
 	}
 
 }

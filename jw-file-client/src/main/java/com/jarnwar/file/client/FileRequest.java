@@ -1,13 +1,17 @@
 package com.jarnwar.file.client;
 
-import java.util.List;
+import java.io.Serializable;
 
-public class FileRequest {
+public class FileRequest implements Serializable {
+
+	private static final long serialVersionUID = -3046549792036100023L;
 
 	// 0: upload, 1: download, 2: remove
 	private byte operationType;
 	
-	private List<FileDto> files;
+	private int fileIdentity;
+	
+	private byte[] fileData;
 
 	public byte getOperationType() {
 		return operationType;
@@ -17,12 +21,20 @@ public class FileRequest {
 		this.operationType = operationType;
 	}
 
-	public List<FileDto> getFiles() {
-		return files;
+	public int getFileIdentity() {
+		return fileIdentity;
 	}
 
-	public void setFiles(List<FileDto> files) {
-		this.files = files;
+	public void setFileIdentity(int fileIdentity) {
+		this.fileIdentity = fileIdentity;
+	}
+
+	public byte[] getFileData() {
+		return fileData;
+	}
+
+	public void setFileData(byte[] fileData) {
+		this.fileData = fileData;
 	}
 	
 }

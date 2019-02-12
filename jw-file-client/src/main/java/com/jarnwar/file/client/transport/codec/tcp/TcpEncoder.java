@@ -10,7 +10,12 @@ public class TcpEncoder extends MessageToByteEncoder<FileRequest> {
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, FileRequest msg, ByteBuf out) throws Exception {
-		
+		byte operationType = msg.getOperationType();
+		int fileIdentity = msg.getFileIdentity();
+		byte[] fileData = msg.getFileData();
+		out.writeByte(operationType);
+		out.writeInt(fileIdentity);
+		out.writeBytes(fileData);
 	}
 
 }

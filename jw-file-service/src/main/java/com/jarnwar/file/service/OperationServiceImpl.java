@@ -1,7 +1,6 @@
 package com.jarnwar.file.service;
 
 import java.io.File;
-import java.util.List;
 
 import com.jarnwar.file.context.annotation.Autowired;
 import com.jarnwar.file.fastdfs.FastDFSConnectionPool;
@@ -12,21 +11,21 @@ public class OperationServiceImpl implements OperationService {
 	private FastDFSConnectionPool pool;
 
 	@Override
-	public String upload(List<File> files) {
+	public int upload(File file) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public File download(int fileIdentity) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<File> download(List<String> fileIds) {
+	public void remove(int fileIdentity) {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
-
-	@Override
-	public void remove(List<String> fileIds) {
-		// TODO Auto-generated method stub
-
-	}
-
+	
 }

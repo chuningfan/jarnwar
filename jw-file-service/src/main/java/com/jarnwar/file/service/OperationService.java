@@ -1,14 +1,13 @@
 package com.jarnwar.file.service;
 
 import java.io.File;
-import java.util.List;
 
 public interface OperationService {
 	
-	String upload(List<File> files);
+	int upload(File file);
 	
-	List<File> download(List<String> fileIds);
+	File download(int fileIdentity);
 	
-	void remove(List<String> fileIds);
+	void remove(int fileIdentity);
 	
 }
