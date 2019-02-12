@@ -21,8 +21,11 @@ import com.jarnwar.file.context.BaseContext;
 import com.jarnwar.file.context.FastDFSContext;
 import com.jarnwar.file.context.NettyServerContext;
 import com.jarnwar.file.context.ZooKeeperContext;
+import com.jarnwar.file.context.annotation.Autowired;
 import com.jarnwar.file.context.annotation.MetaKey;
 import com.jarnwar.file.server.NettyServer;
+import com.jarnwar.file.server.handler.HttpUploadServerHandler;
+import com.jarnwar.file.server.handler.TcpUploadServerHandler;
 import com.jarnwar.file.service.OperationServiceImpl;
 
 public class Bootstrap {
@@ -37,7 +40,9 @@ public class Bootstrap {
 
 	private static Map<Class<?>, Object> CONTEXT_BEANS = Maps.newConcurrentMap();
 
-	private static final Class<?>[] SERVICES = { OperationServiceImpl.class };
+	private static final Class<?>[] SERVICES = { OperationServiceImpl.class};
+	
+	private static final Class<?>[] SERVER_HANDLERS = { HttpUploadServerHandler.class, TcpUploadServerHandler.class};
 
 	enum Config {
 		SERVER("server.properties") {
@@ -85,30 +90,50 @@ public class Bootstrap {
 		if (Objects.isNull(CONFIGS)) {
 			CONFIGS = loadConfigs();
 		}
-		NettyServerContext serverContext = new NettyServerContext(
-				(NettyServerConfiguration) CONFIGS.get(NettyServerConfiguration.class));
+		NettyServerContext serverContext = null;
+		if (Objects.isNull(CONTEXT_BEANS.get(NettyServerContext.class))) {
+			serverContext = new NettyServerContext(
+					(NettyServerConfiguration) CONFIGS.get(NettyServerConfiguration.class));
+			CONTEXT_BEANS.put(NettyServerContext.class, serverContext);
+		} else {
+			serverContext = (NettyServerContext) CONTEXT_BEANS.get(NettyServerContext.class);
+		}
 		serverContext.init();
-		ZooKeeperContext zkContext = new ZooKeeperContext(
-				(ZooKeeperConfiguration) CONFIGS.get(ZooKeeperConfiguration.class));
+		ZooKeeperContext zkContext = null;
+		if (Objects.isNull(CONTEXT_BEANS.get(ZooKeeperContext.class))) {
+			zkContext = new ZooKeeperContext(
+					(ZooKeeperConfiguration) CONFIGS.get(ZooKeeperConfiguration.class));
+			CONTEXT_BEANS.put(ZooKeeperContext.class, zkContext);
+		} else {
+			zkContext = (ZooKeeperContext) CONTEXT_BEANS.get(ZooKeeperContext.class);
+		}
 		zkContext.init();
-		FastDFSContext fastDFSContext = new FastDFSContext(
-				(FastDFSConfiguration) CONFIGS.get(FastDFSConfiguration.class));
+		FastDFSContext fastDFSContext = null;
+		if (Objects.isNull(CONTEXT_BEANS.get(FastDFSContext.class))) {
+			fastDFSContext = new FastDFSContext(
+					(FastDFSConfiguration) CONFIGS.get(FastDFSConfiguration.class));
+			CONTEXT_BEANS.put(FastDFSContext.class, fastDFSContext);
+		} else {
+			fastDFSContext = (FastDFSContext) CONTEXT_BEANS.get(FastDFSContext.class);
+		}
 		fastDFSContext.init();
-
-		CONTEXT_BEANS.put(NettyServerContext.class, serverContext);
-		CONTEXT_BEANS.put(ZooKeeperContext.class, zkContext);
-		CONTEXT_BEANS.put(FastDFSContext.class, fastDFSContext);
 
 		// add service to BEANS
 		for (Class<?> clazz : SERVICES) {
 			try {
 				Object serviceInstance = clazz.newInstance();
+				autoSetValue(serviceInstance);
 				BaseContext.addBean(serviceInstance);
 			} catch (InstantiationException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
 		}
-
+		// add injections to 
+		for (Class<?> clazz: SERVER_HANDLERS) {
+			Object handlerInstance = clazz.newInstance();
+			autoSetValue(handlerInstance);
+		}
+		
 		NettyServer server = BaseContext.getBean(NettyServer.class);
 
 		if (args.length > 0) {
@@ -130,6 +155,21 @@ public class Bootstrap {
 		}
 	}
 
+	private static void autoSetValue(Object instance) throws IllegalArgumentException, IllegalAccessException {
+		Field[] fields = instance.getClass().getDeclaredFields();
+		if (Objects.nonNull(fields) && fields.length > 0) {
+			for (Field f: fields) {
+				Autowired aw = f.getAnnotation(Autowired.class);
+				if (Objects.nonNull(aw)) {
+					Class<?> injectedClass = aw.beanClass();
+					Object bean = BaseContext.getBean(injectedClass);
+					f.setAccessible(true);
+					f.set(instance, bean);
+				}
+			}
+		}
+	}
+	
 	private static Map<Class<?>, Object> loadConfigs()
 			throws InstantiationException, IllegalAccessException, FileNotFoundException, IOException {
 		String configPath = BASE_PATH + "/config";

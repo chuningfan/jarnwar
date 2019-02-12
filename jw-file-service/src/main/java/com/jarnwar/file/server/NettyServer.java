@@ -61,13 +61,13 @@ public class NettyServer implements Server {
 	}
 
 	private void printFlag() {
-		String flag = "☆☆☆☆☆ ☆      ☆ ☆☆☆           ☆☆☆\n" +
+		String flag = "☆☆☆☆☆ ☆      ☆ ☆☆☆          ☆☆☆\n" +
 					  "	 ☆    ☆ ☆    ☆  ☆             ☆\n" +
 					  "         ☆    ☆  ☆   ☆   ☆     ☆     ☆\n" +
 					  "         ☆    ☆   ☆  ☆    ☆    ☆    ☆\n" +
 					  "         ☆    ☆    ☆ ☆     ☆   ☆   ☆\n" + 
 					  "         ☆    ☆     ☆☆      ☆  ☆  ☆\n" +
-					  "      ☆ ☆    ☆       ☆       ☆   ☆\n";
+					  " ☆ ☆ ☆ ☆    ☆       ☆       ☆   ☆\n";
 		Logger.getGlobal().info(flag);
 	}
 

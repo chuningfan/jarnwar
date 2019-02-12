@@ -1,4 +1,4 @@
-package com.jarnwar.file.server.codec;
+package com.jarnwar.file.client.transport.codec.tcp;
 
 import java.util.List;
 

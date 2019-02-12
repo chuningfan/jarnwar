@@ -1,7 +1,7 @@
 package com.jarnwar.file.server.protocol;
 
-import com.jarnwar.file.server.codec.TcpDecoder;
-import com.jarnwar.file.server.codec.TcpEncoder;
+import com.jarnwar.file.client.transport.codec.tcp.TcpDecoder;
+import com.jarnwar.file.client.transport.codec.tcp.TcpEncoder;
 import com.jarnwar.file.server.handler.TcpUploadServerHandler;
 
 import io.netty.channel.Channel;
